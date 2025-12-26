@@ -1,0 +1,141 @@
+---
+title: An R Markdown document converted from "Marrone_Demo1.ipynb"
+output: html_document
+---
+
+# Start fresh
+
+code for starting fresh?
+```{r}
+rm(list = ls()) ## code to reset the environment
+```
+
+
+# get the data
+
+code for opening a file from a url (file in Excel), name it 'fragility23'?
+```{r}
+linkGit="https://github.com/DACSS-Fundamentals/overview/raw/refs/heads/main/FSI-2023-DOWNLOAD.xlsx" ## code to open a file from a specific url ## code to request a file from a specific link
+```
+
+```{r}
+fragility23=rio::import(file = linkGit) ## code to use the package rio, import the file above and name it 'fragility23' - I checked the packages in RStudio to install rio first rather than installing it with code.
+```
+
+# exploratory commands
+
+find out column names in 'fragility23'?
+```{r}
+names(x = fragility23) ## code requests the column names of 'fragility23'
+```
+
+Check the data types in df?
+```{r}
+str(object = fragility23) ## code requests the type of data in 'fragility23' to see if they are numerical or characters which is important in statistics to know if the numerical values are recognized as such in R
+```
+
+show me the first 10 rows?
+```{r}
+head(x = fragility23,10) ## code asks for the first ten rows of data in 'fragility23'
+```
+
+show me the last 10 rows?
+```{r}
+tail(fragility23,10) ## code asks for the last ten rows of data in 'fragility23'
+```
+
+# transformative commands
+
+## subsetting
+
+keep some columns:
+Country, Total,
+S1: Demographic Pressures,
+P1: State Legitimacy,
+E2: Economic Inequality into object 'frag23_sub'
+```{r}
+grep(pattern = "Country|S1|P1|E2|Total",x = names(fragility23),fixed = F,value = T) ## code to test what the column names are in 'fragility23' because those are the specific columns I want to keep
+```
+
+```{r}
+keep=grep("Country|S1|P1|E2|Total",names(fragility23),fixed = F,value = T)
+frag23_sub=fragility23[,keep] ## code to create a new data frame named 'frag23' with only the specific columns wanted
+```
+
+## renaming
+
+rename 'frag23_sub' columns, keep var codes  only
+```{r}
+names(frag23_sub)[3:5]=c("S1","E2","P1") ## code names columns 3 to 5 in 'frag23' by the variable code part of their column name from 'fragility23'
+```
+
+
+## filtering
+
+get me the top ten best countries on the  'E2'  measure from 'frag23_sub'
+```{r}
+tail(frag23_sub[order(x=-frag23_sub$E2),],10) ## code requests the top ten best countries on E2: Economic Inequality. In order to be best, a country would need to have a low score. Code will show the countries and their data in the data frame.
+```
+
+# some computations
+
+give the statistical description of "frag23_sub"
+```{r}
+summary(object=frag23_sub) ## code requests the statistical description of 'frag23_sub'
+```
+
+the value of the worst quartile in Total
+```{r}
+q3_Total=quantile(x = frag23_sub$Total, 
+                  probs = 0.75, 
+                  na.rm = TRUE) ## code requests the value of the worst quartile in the 'total' column from the statistical description in the step before.
+```
+
+show correlations between "S1","E2", "P1"
+```{r}
+cor(x=frag23_sub[,-c(1,2)]) #no 'Country', no "Total' ## code requests the correlations between the columns of S1, E2, P1
+```
+
+```{r}
+library(corrtable)
+corrtable::correlation_matrix(df = frag23_sub[,-c(1,2)]) ## code installed the package 'corrtable' then requested the correlations and the significance, shown with an asterisk, between the columns S1, E2, P1. 
+```
+
+regress P1 and E2 on S1
+```{r}
+lm(S1~P1+E2, data = frag23_sub) ## code requests the regression function to show the relationships between S1 as the dependent variable and P1 and E2 as the independent variables in 'frag23_sub'
+```
+
+```{r}
+model <- lm(S1 ~ P1 + E2, data = frag23_sub)
+summary(model) ## code first requests a model of the regression carried out in the step before then requests a summary of that model
+```
+
+# some plotting
+
+give me a plot for the 'P1' variable
+```{r}
+hist(x = frag23_sub$P1) ## code requests a histogram of the P1 variable from 'frag23_sub'
+```
+
+visual correlation between S1 and E2
+```{r}
+plot(x=frag23_sub$S1, y=frag23_sub$E2) ## code requests a visual of the correlation between the variables S1 and E2 from 'frag23_sub'
+```
+
+```{r}
+frag23_sub$Total>=q3_Total ## code requests to show which data points are true (higher than the worst quartile) or false
+frag23_sub$worstQt=frag23_sub$Total>=q3_Total ## code requests the 'frag23_sub' to be updated with a column that shows whether the data point country was true or false like the line before. It takes the information from code line 127 and puts it into the 'frag23_sub' data frame
+```
+
+```{r}
+plot(frag23_sub$S1, 
+     frag23_sub$E2,pch=20,
+     col = as.factor(frag23_sub$worstQt)) ## code takes the information from the new column above and add colors to the dots of the plot from code line 123
+```
+
+visual of the regression P1 and E2 on S1
+```{r}
+library(sjPlot) ## code installs the sjPlot package in order to run the next line of code
+plot_models(model) ## code requests a visual model of the regression of P1 and E2 on S1
+```
